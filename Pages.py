@@ -1,6 +1,28 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+import massTextUtils as utils
+from twilio.rest import Client
+import openpyxl
+import sys, time
+###############################################################################
+###############################################################################
+# Input from GUI
+# Your Account SID from twilio.com/console
+account_sid = None
+# Your Auth Token from twilio.com/console
+auth_token = None
+# Number that the texts will be sent from
+twil_num = None
+msg_data = None
+client = None
+#Filepath to stored number list
+file_path = None
+wb = None
+excel_sheet = None
+# Holds list of numbers
+phone_numbers = []
+surpress_output = False
 
 class MainScreen(QMainWindow):
 
@@ -9,77 +31,174 @@ class MainScreen(QMainWindow):
         self.initUI()
     
     def initUI(self):
-        grid = QGridLayout()
-        grid.setSpacing(10)
         self.showNumberInputs()
         self.showProgramOutput()
         self.showExcelImport()
         # Window
-        self.resize(840, 540)
+        self.setFixedSize(840, 540)
         self.setWindowTitle('Mass Text by Matthew Venter')
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon('Resources/icon.png'))
         self.showMenu()
         self.show()
-        
+
+
     def showMenu(self):
         # Actions
-        importAct = QAction(QIcon('import_icon.png'), 'Import List', self)        
-        importAct.setShortcut('Ctrl+I')
-        importAct.setStatusTip('Import .XLSX file')
-        #importAct.triggered.connect(qApp.quit)
+        self.importAct = QAction(QIcon('import_icon.png'), 'Import List', self)        
+        self.importAct.setShortcut('Ctrl+I')
+        self.importAct.setStatusTip('Import .XLSX file')
+        self.importAct.triggered.connect(self.importBtnClicked)
 
-        exitAct = QAction(QIcon('exit24.png'), 'Exit', self)
-        exitAct.setShortcut('Ctrl+Q')
-        exitAct.setStatusTip('Exit application')
-        exitAct.triggered.connect(self.close)
+        self.exitAct = QAction(QIcon('exit24.png'), 'Exit', self)
+        self.exitAct.setShortcut('Ctrl+Q')
+        self.exitAct.setStatusTip('Exit application')
+        self.exitAct.triggered.connect(self.close)
 
         # Menus
         menubar = self.menuBar()
-        fileMenu = menubar.addMenu('File')
-        fileMenu.addAction(importAct)
-        fileMenu.addAction(exitAct)
+        self.fileMenu = menubar.addMenu('File')
+        self.fileMenu.addAction(self.importAct)
+        self.fileMenu.addAction(self.exitAct)
     
     def showNumberInputs(self):
         # User
-        user_num = QLabel('User Phone Number:', self)
-        user_num.setStyleSheet("QLabel {color: blue;}")
-        user_num.adjustSize()
-        user_num.move(20, 55)
+        self.user_num_label = QLabel('User Phone Number:', self)
+        self.user_num_label.adjustSize()
+        self.user_num_label.move(20, 35)
         
-        user_num_le = QLineEdit(self)
-        user_num_le.resize(190, 28)
-        user_num_le.move(190, 50)
-        
+        self.user_num_le = QLineEdit(self)
+        self.user_num_le.resize(190, 25)
+        self.user_num_le.move(185, 30)
 
         # Twilio
-        twil_num = QLabel('Twilio Phone Number:', self)
-        twil_num.setStyleSheet("QLabel {color: blue;}")
-        twil_num.adjustSize()
-        twil_num.move(20, 105)
+        self.twil_num_label = QLabel('Twilio Phone Number:', self)
+        self.twil_num_label.adjustSize()
+        self.twil_num_label.move(20, 73)
         
-        twil_num_le = QLineEdit(self)
-        twil_num_le.resize(190, 28)
-        twil_num_le.move(190, 100)
+        self.twil_num_le = QLineEdit(self)
+        self.twil_num_le.resize(190, 25)
+        self.twil_num_le.move(185, 70)
+
+        #Twilio Auth
+        self.twil_sid_label = QLabel('Twilio SID:', self)
+        self.twil_sid_label.adjustSize()
+        self.twil_sid_label.move(20, 110)
+
+        self.twil_sid_le = QLineEdit(self)
+        self.twil_sid_le.resize(190, 25)
+        self.twil_sid_le.move(185, 108)
+
+        self.twil_authid_label = QLabel('Twilio Auth ID:', self)
+        self.twil_authid_label.adjustSize()
+        self.twil_authid_label.move(20, 150)
+
+        self.twil_authid_le = QLineEdit(self)
+        self.twil_authid_le.resize(190, 25)
+        self.twil_authid_le.move(185, 147)
+
+        #Save
+        self.set_btn = QPushButton('Set', self)
+        self.set_btn.clicked.connect(self.setBtnClick)
+        self.set_btn.adjustSize()
+        self.set_btn.move(298, 190) 
+
     
     def showProgramOutput(self):
-        output_label = QLabel('Program Output:', self)
-        output_label.setStyleSheet("QLabel {color: orange;}")
-        output_label.adjustSize()
-        output_label.move(20, 200)
+        self.output_label = QLabel('Program Output:', self)
+        self.output_label.setStyleSheet("QLabel {color: green}")
+        self.output_label.adjustSize()
+        self.output_label.move(20, 210)
 
-        output_textbox = QPlainTextEdit(self)
-        output_textbox.resize(375, 290)
-        output_textbox.move(20, 225)
-        # TODO use setPlainText(), insertPlainText(), and appendPlainText() 
-        # TODO to grab from massText
-    
+        self.surpress_ckbx = QCheckBox("Surpress output", self)
+        self.surpress_ckbx.adjustSize()
+        self.surpress_ckbx.setChecked(False)
+        self.surpress_ckbx.stateChanged.connect(lambda:self.btnstate(self.surpress_ckbx))
+        self.surpress_ckbx.move(20, 510)
+
+        self.output_textbox = QPlainTextEdit(self)
+        self.output_textbox.setStyleSheet("QPlainTextEdit {background-color: grey}")
+        self.output_textbox.resize(370, 275)
+        self.output_textbox.move(20, 235)
+
+        self.msg_lbl = QLabel("Message: Type a message to send", self)
+        self.msg_lbl.setStyleSheet("QLabel {color: green}")
+        self.msg_lbl.adjustSize()
+        self.msg_lbl.move(425, 325)
+        
+        self.msg_to_send = QPlainTextEdit(self)
+        self.msg_to_send.setStyleSheet("QPlainTextEdit {background-color: grey}")
+        self.msg_to_send.resize(395, 155)
+        self.msg_to_send.move(425, 345)
+
+        self.progress = QProgressBar(self)
+        self.progress.setGeometry(425, 505, 250, 20)
+        self.progress.setMaximum(100)
+
+        self.run_btn = QPushButton("Run", self)
+        self.run_btn.clicked.connect(self.runBtnClick)
+        self.run_btn.adjustSize()
+        self.run_btn.move(750, 510)
+
+     
     def showExcelImport(self):
-        output_label = QLabel('Phone Numbers:', self)
-        output_label.setStyleSheet("QLabel {color: darkblue;}")
+        output_label = QLabel("Phone Number List:  Select '.XLSX' file", self)
+        output_label.setStyleSheet("QLabel {color: green}")
         output_label.adjustSize()
-        output_label.move(450, 30)
+        output_label.move(425, 30)
 
-        import_button = QPushButton('Import list', self)
-        import_button.adjustSize()
-        import_button.move(575, 27)
+        file_path_label = QLabel("File Path:", self)
+        file_path_label.adjustSize()
+        file_path_label.move(425, 50)
+
+        self.file_path_le = QLineEdit(self)
+        self.file_path_le.resize(220, 20)
+        self.file_path_le.move(495, 49)
+
+        self.numbers_list = QPlainTextEdit(self)
+        self.numbers_list.setStyleSheet("QPlainTextEdit {background-color: grey}")
+        self.numbers_list.resize(395, 250)
+        self.numbers_list.move(425, 70)
+
+        self.import_btn = QPushButton("Import", self)
+        self.import_btn.adjustSize()
+        self.import_btn.clicked.connect(self.importBtnClicked)
+        self.import_btn.move(740, 27)
+    
+    def importBtnClicked(self):
+        filename, _ = QFileDialog.getOpenFileName(self, caption='Select .XLSX file')
+        self.file_path_le.setText(filename)
+        self.file_path = filename
+        self.wb = openpyxl.load_workbook(self.file_path)
+        self.excel_sheet = self.wb.active
+        self.phone_numbers = utils.populateNumberList(self.excel_sheet)
         # TODO import file and pass to program
+        count = 1
+        if self.phone_numbers:
+            for num in self.phone_numbers:
+                self.numbers_list.appendPlainText(str(count) + ": " + str(num))
+                count +=1
+    
+    def btnstate(self, b):
+      if b.text() == "Surpress output":
+         if b.isChecked() == True:
+            self.surpress_output = True
+            return True
+         else:
+            self.surpress_output = False
+            return False
+    
+    def setBtnClick(self):
+        self.account_sid = self.twil_sid_le.text()
+        self.auth_token = self.twil_authid_le.text()
+        self.user_number = utils.formatNumber(self.user_num_le.text())
+        self.twil_num = utils.formatNumber(self.twil_num_le.text())
+        try:
+            self.client = Client(self.account_sid, self.auth_token)
+            self.output_textbox.appendPlainText("Successfully created Twilio Client")
+        except:
+            print("Unable to initialize client with SID and Auth token...")
+    
+    def runBtnClick(self):
+        msg_data = self.msg_to_send.toPlainText()
+        utils.massSendSMS(msg_data, self.phone_numbers, self.excel_sheet, self)
+        self.wb.save(self.file_path)

@@ -1,7 +1,11 @@
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from openpyxl.styles import PatternFill, Alignment
 from flask import Flask, request
 from twilio import twiml
 import time
+import Pages
 # Sends the same text to mass amount
 # Set num_recipients < 0 to send to all numbers in file
 # Client must already be declared with tokens
@@ -49,19 +53,23 @@ def markSentExcel(num, sheet, color):
 		count+=1
 
 # Send same message to entire list
-# msg - message to mass send; client - twilio client; number - list of numbers as strings
-# send_num - twilio number to send msg from; sheet - excel sheet for marking sent
-def massSendSMS(msg, client, numbers, send_num, sheet):
+# msg - message to mass send; client - twilio client; numbers - list of numbers as strings
+# twil_num - twilio number to send msg from; sheet - excel sheet for marking sent
+def massSendSMS(msg, numbers, sheet, self):
 	count = 1
+	output = None
 	for num in numbers:
 		try:
-			#client.messages.create(body=msg + " " + str(count), from_=send_num, to=num)#TODO un-comment
-			print("Fake send to: " + str(num) + " | Number: " + str(count))
+			self.client.messages.create(body=msg, from_=self.twil_num, to=num)
 		except:
 			markSentExcel(num, sheet, RED)
-			print("Message send failure, SID: ")
+			output = "Message send failure to: " + num
 		else:
 			markSentExcel(num, sheet, GREEN)
-			print("Message sent to " + num)
+			output = "Message sent to " + num
+		if (self.import_btn.isChecked() == False):
+			self.output_textbox.appendPlainText(output)
+		self.progress.setValue((count/len(numbers)) * 100)
+		QApplication.processEvents()
 		count+=1
-		time.sleep(1.5)
+		time.sleep(1)
