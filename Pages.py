@@ -61,40 +61,31 @@ class MainScreen(QMainWindow):
         self.fileMenu.addAction(self.exitAct)
     
     def showNumberInputs(self):
-        # User
-        self.user_num_label = QLabel('User Phone Number:', self)
-        self.user_num_label.adjustSize()
-        self.user_num_label.move(20, 35)
-        
-        self.user_num_le = QLineEdit(self)
-        self.user_num_le.resize(190, 25)
-        self.user_num_le.move(185, 30)
-
         # Twilio
         self.twil_num_label = QLabel('Twilio Phone Number:', self)
         self.twil_num_label.adjustSize()
-        self.twil_num_label.move(20, 73)
+        self.twil_num_label.move(20, 63)
         
         self.twil_num_le = QLineEdit(self)
         self.twil_num_le.resize(190, 25)
-        self.twil_num_le.move(185, 70)
+        self.twil_num_le.move(185, 60)
 
-        #Twilio Auth
+        # Auth
         self.twil_sid_label = QLabel('Twilio SID:', self)
         self.twil_sid_label.adjustSize()
-        self.twil_sid_label.move(20, 110)
+        self.twil_sid_label.move(20, 100)
 
         self.twil_sid_le = QLineEdit(self)
         self.twil_sid_le.resize(190, 25)
-        self.twil_sid_le.move(185, 108)
+        self.twil_sid_le.move(185, 98)
 
         self.twil_authid_label = QLabel('Twilio Auth ID:', self)
         self.twil_authid_label.adjustSize()
-        self.twil_authid_label.move(20, 150)
+        self.twil_authid_label.move(20, 140)
 
         self.twil_authid_le = QLineEdit(self)
         self.twil_authid_le.resize(190, 25)
-        self.twil_authid_le.move(185, 147)
+        self.twil_authid_le.move(185, 137)
 
         #Save
         self.set_btn = QPushButton('Set', self)
@@ -116,6 +107,7 @@ class MainScreen(QMainWindow):
         self.surpress_ckbx.move(20, 510)
 
         self.output_textbox = QPlainTextEdit(self)
+        self.output_textbox.setReadOnly(True)
         self.output_textbox.setStyleSheet("QPlainTextEdit {background-color: grey}")
         self.output_textbox.resize(370, 275)
         self.output_textbox.move(20, 235)
@@ -155,6 +147,7 @@ class MainScreen(QMainWindow):
         self.file_path_le.move(495, 49)
 
         self.numbers_list = QPlainTextEdit(self)
+        self.numbers_list.setReadOnly(True)
         self.numbers_list.setStyleSheet("QPlainTextEdit {background-color: grey}")
         self.numbers_list.resize(395, 250)
         self.numbers_list.move(425, 70)
@@ -190,11 +183,10 @@ class MainScreen(QMainWindow):
     def setBtnClick(self):
         self.account_sid = self.twil_sid_le.text()
         self.auth_token = self.twil_authid_le.text()
-        self.user_number = utils.formatNumber(self.user_num_le.text())
         self.twil_num = utils.formatNumber(self.twil_num_le.text())
         try:
             self.client = Client(self.account_sid, self.auth_token)
-            self.output_textbox.appendPlainText("Successfully created Twilio Client")
+            self.output_textbox.appendPlainText("Successfully created Twilio Client\n")
         except:
             print("Unable to initialize client with SID and Auth token...")
     

@@ -48,7 +48,6 @@ def markSentExcel(num, sheet, color):
 			else:
 				cellColor.value = "FAIL"
 			cellColor.alignment = Alignment(horizontal='center')
-			#print("Found number " + num + " in excel sheet row: " + str(count))
 			break
 		count+=1
 
@@ -63,13 +62,13 @@ def massSendSMS(msg, numbers, sheet, self):
 			self.client.messages.create(body=msg, from_=self.twil_num, to=num)
 		except:
 			markSentExcel(num, sheet, RED)
-			output = "Message send failure to: " + num
+			output = "Message send failure to " + num
 		else:
 			markSentExcel(num, sheet, GREEN)
 			output = "Message sent to " + num
-		if (self.import_btn.isChecked() == False):
+		if self.surpress_ckbx.isChecked() == False:
 			self.output_textbox.appendPlainText(output)
 		self.progress.setValue((count/len(numbers)) * 100)
 		QApplication.processEvents()
 		count+=1
-		time.sleep(1)
+		time.sleep(0.3)

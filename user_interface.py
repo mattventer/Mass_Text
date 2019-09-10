@@ -11,7 +11,6 @@ import Pages as pages
 
 if __name__ == '__main__':
     app = QApplication([])
-    app.setStyle('Breeze')
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, Qt.white)
