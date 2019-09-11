@@ -65,33 +65,37 @@ class MainScreen(QMainWindow):
         self.twil_num_label = QLabel('Twilio Phone Number:', self)
         self.twil_num_label.adjustSize()
         self.twil_num_label.move(20, 63)
+        self.twil_num_label.setToolTip("This is the Twilio registered phone number that will send the messages")
         
         self.twil_num_le = QLineEdit(self)
-        self.twil_num_le.resize(190, 25)
+        self.twil_num_le.resize(200, 25)
         self.twil_num_le.move(185, 60)
 
         # Auth
         self.twil_sid_label = QLabel('Twilio SID:', self)
         self.twil_sid_label.adjustSize()
         self.twil_sid_label.move(20, 100)
+        self.twil_sid_label.setToolTip("Twilio Account SID.\nFound in Twilio Dashboard")
 
         self.twil_sid_le = QLineEdit(self)
-        self.twil_sid_le.resize(190, 25)
+        self.twil_sid_le.resize(200, 25)
         self.twil_sid_le.move(185, 98)
 
         self.twil_authid_label = QLabel('Twilio Auth ID:', self)
         self.twil_authid_label.adjustSize()
         self.twil_authid_label.move(20, 140)
+        self.twil_authid_label.setToolTip("Twilio Auth Token.\nFound in Twilio Dashboard")
 
         self.twil_authid_le = QLineEdit(self)
-        self.twil_authid_le.resize(190, 25)
+        self.twil_authid_le.resize(200, 25)
         self.twil_authid_le.move(185, 137)
 
         #Save
-        self.set_btn = QPushButton('Set', self)
+        self.set_btn = QPushButton('Create Client', self)
         self.set_btn.clicked.connect(self.setBtnClick)
         self.set_btn.adjustSize()
-        self.set_btn.move(298, 190) 
+        self.set_btn.move(290, 180) 
+        self.set_btn.setToolTip("Create Twilio Client using provided information")
 
     
     def showProgramOutput(self):
@@ -105,6 +109,7 @@ class MainScreen(QMainWindow):
         self.surpress_ckbx.setChecked(False)
         self.surpress_ckbx.stateChanged.connect(lambda:self.btnstate(self.surpress_ckbx))
         self.surpress_ckbx.move(20, 510)
+        self.surpress_ckbx.setToolTip("Enable to turn-off message statuses")
 
         self.output_textbox = QPlainTextEdit(self)
         self.output_textbox.setReadOnly(True)
@@ -112,10 +117,11 @@ class MainScreen(QMainWindow):
         self.output_textbox.resize(370, 275)
         self.output_textbox.move(20, 235)
 
-        self.msg_lbl = QLabel("Message: Type a message to send", self)
+        self.msg_lbl = QLabel("Message:", self)
         self.msg_lbl.setStyleSheet("QLabel {color: green}")
         self.msg_lbl.adjustSize()
         self.msg_lbl.move(425, 325)
+        self.msg_lbl.setToolTip("This is the message that will be sent to above recipients")
         
         self.msg_to_send = QPlainTextEdit(self)
         self.msg_to_send.setStyleSheet("QPlainTextEdit {background-color: grey}")
@@ -133,7 +139,7 @@ class MainScreen(QMainWindow):
 
      
     def showExcelImport(self):
-        output_label = QLabel("Phone Number List:  Select '.XLSX' file", self)
+        output_label = QLabel("Phone Number List: ", self)
         output_label.setStyleSheet("QLabel {color: green}")
         output_label.adjustSize()
         output_label.move(425, 30)
@@ -156,6 +162,7 @@ class MainScreen(QMainWindow):
         self.import_btn.adjustSize()
         self.import_btn.clicked.connect(self.importBtnClicked)
         self.import_btn.move(740, 27)
+        self.import_btn.setToolTip("Select an '.XLSX' file containing phone numbers in first column")
     
     def importBtnClicked(self):
         filename, _ = QFileDialog.getOpenFileName(self, caption='Select .XLSX file')
@@ -164,7 +171,6 @@ class MainScreen(QMainWindow):
         self.wb = openpyxl.load_workbook(self.file_path)
         self.excel_sheet = self.wb.active
         self.phone_numbers = utils.populateNumberList(self.excel_sheet)
-        # TODO import file and pass to program
         count = 1
         if self.phone_numbers:
             for num in self.phone_numbers:
@@ -189,6 +195,8 @@ class MainScreen(QMainWindow):
             self.output_textbox.appendPlainText("Successfully created Twilio Client\n")
         except:
             print("Unable to initialize client with SID and Auth token...")
+            if self.account_sid is None:
+                print("MISSING: Twilio Account SID")
     
     def runBtnClick(self):
         msg_data = self.msg_to_send.toPlainText()
