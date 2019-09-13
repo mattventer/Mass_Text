@@ -12,9 +12,9 @@ import Pages
 # Client must already be declared with tokens
 
 # Excel file format
-NUM_COL = 1
-NAME_COL = 2
-RES_COL = 3
+NUM_COL = None
+NAME_COL = None
+RES_COL = None
 
 
 # Cell colors
@@ -86,7 +86,7 @@ def markSentExcel(num, sheet, color):
             else:
                 cellColor.value = "FAIL"
             cellColor.alignment = Alignment(horizontal='center')
-            break
+            #break #TODO took this out for testing with the same number
         count += 1
 
 # Send same message to entire list
@@ -106,10 +106,10 @@ def massSendSMS(msg, numbers, sheet, self):
                 body=message, from_=self.twil_num, to=num.number)
         except:
             markSentExcel(num.number, sheet, RED)
-            output = "Message send failure to " + num.number
+            output = "FAIL: " + num.number
         else:
             markSentExcel(num.number, sheet, GREEN)
-            output = "Message sent to " + num.number
+            output = "SUCCESS: " + num.number
         if self.surpress_ckbx.isChecked() == False:
             self.output_textbox.appendPlainText(output)
         self.progress.setValue((count/len(numbers)) * 100)
