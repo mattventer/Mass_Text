@@ -22,7 +22,7 @@ file_path = None
 wb = None
 excel_sheet = None
 # Holds list of numbers
-phone_numbers = []
+contact_list = []
 surpress_output = False
 
 
@@ -113,7 +113,7 @@ class MainScreen(QMainWindow):
         self.surpress_ckbx.setChecked(False)
         self.surpress_ckbx.stateChanged.connect(
             lambda: self.btnstate(self.surpress_ckbx))
-        self.surpress_ckbx.move(20, 510)
+        self.surpress_ckbx.move(250, 210)
         self.surpress_ckbx.setToolTip("Enable to turn-off message statuses")
 
         self.output_textbox = QPlainTextEdit(self)
@@ -128,10 +128,10 @@ class MainScreen(QMainWindow):
         self.msg_lbl.adjustSize()
         self.msg_lbl.move(425, 325)
         self.msg_lbl.setToolTip(
-            "This is the message that will be sent to above recipients")
+            "Note: Messages over 160 characters will be\nsent in multiple texts.")
         
         self.msg_note = QLabel(
-            "Note: Messages over 160 characters will be\nsent in multiple texts.", self)
+            "Note: Include 'name' within message to be\nreplaced by recipient's first name.", self)
         self.msg_note.adjustSize()
         self.msg_note.setStyleSheet("QLabel {color: lightgrey}")
         self.msg_note.move(425, 500)
@@ -150,6 +150,13 @@ class MainScreen(QMainWindow):
         self.run_btn.clicked.connect(self.runBtnClick)
         self.run_btn.adjustSize()
         self.run_btn.move(750, 510)
+
+        self.clear_output = QPushButton("Clear", self)
+        self.clear_output.clicked.connect(self.clearOutputBox)
+        self.clear_output.adjustSize()
+        self.clear_output.move(19, 513)
+
+
 
     def showExcelImport(self):
         output_label = QLabel("Phone Number List: ", self)
@@ -186,11 +193,11 @@ class MainScreen(QMainWindow):
         self.file_path = filename
         self.wb = openpyxl.load_workbook(self.file_path)
         self.excel_sheet = self.wb.active
-        self.phone_numbers = utils.populateNumberList(self.excel_sheet)
+        self.contact_list = utils.populateNumberList(self.excel_sheet)
         count = 1
-        if self.phone_numbers:
-            for num in self.phone_numbers:
-                self.numbers_list.appendPlainText(str(count) + ": " + str(num))
+        if self.contact_list:
+            for num in self.contact_list:
+                self.numbers_list.appendPlainText(str(count) + ": " + num.getInfo())
                 count += 1
 
     def btnstate(self, b):
@@ -201,6 +208,12 @@ class MainScreen(QMainWindow):
             else:
                 self.surpress_output = False
                 return False
+                
+
+    def clearOutputBox(self):
+        self.output_textbox.clear()
+        print("Clearing output...")
+
 
     def setBtnClick(self):
         self.account_sid = self.twil_sid_le.text()
@@ -208,15 +221,14 @@ class MainScreen(QMainWindow):
         self.twil_num = utils.formatNumber(self.twil_num_le.text())
         try:
             self.client = Client(self.account_sid, self.auth_token)
-            self.output_textbox.appendPlainText(
-                "Successfully created Twilio Client\n")
+            self.output_textbox.appendPlainText("Successfully created Twilio Client\n")
         except:
-            print("Unable to initialize client with SID and Auth token...")
+            self.output_textbox.appendPlainText("Unable to initialize client with SID and Auth token...")
 
     def runBtnClick(self):
         msg_data = self.msg_to_send.toPlainText()
-        time = utils.massSendSMS(
-            msg_data, self.phone_numbers, self.excel_sheet, self)
+        exec_time = utils.massSendSMS(
+            msg_data, self.contact_list, self.excel_sheet, self)
         self.output_textbox.appendPlainText(
-            "\nExecution time: " + str(round(time, 2)) + " seconds")
+            "\nExecution time: " + str(round(exec_time, 2)) + " seconds")
         self.wb.save(self.file_path)
