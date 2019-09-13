@@ -100,7 +100,8 @@ class MainScreen(QMainWindow):
         self.set_btn.adjustSize()
         self.set_btn.move(290, 180)
         self.set_btn.setToolTip(
-            "Create Twilio Client using provided information")
+            "Create Twilio Client using provided information.\n"
+            "Only required to create once per session.")
 
     def showProgramOutput(self):
         self.output_label = QLabel('Program Output:', self)
@@ -128,8 +129,8 @@ class MainScreen(QMainWindow):
         self.msg_lbl.adjustSize()
         self.msg_lbl.move(425, 325)
         self.msg_lbl.setToolTip(
-            "Note: Messages over 160 characters will be\nsent in multiple texts.")
-        
+            "Messages over 160 characters will be\nsent in multiple texts.")
+
         self.msg_note = QLabel(
             "Note: Include 'name' within message to be\nreplaced by recipient's first name.", self)
         self.msg_note.adjustSize()
@@ -154,9 +155,8 @@ class MainScreen(QMainWindow):
         self.clear_output = QPushButton("Clear", self)
         self.clear_output.clicked.connect(self.clearOutputBox)
         self.clear_output.adjustSize()
+        self.clear_output.setToolTip("Clear program output")
         self.clear_output.move(19, 513)
-
-
 
     def showExcelImport(self):
         output_label = QLabel("Phone Number List: ", self)
@@ -197,7 +197,8 @@ class MainScreen(QMainWindow):
         count = 1
         if self.contact_list:
             for num in self.contact_list:
-                self.numbers_list.appendPlainText(str(count) + ": " + num.getInfo())
+                self.numbers_list.appendPlainText(
+                    str(count) + ": " + num.getInfo())
                 count += 1
 
     def btnstate(self, b):
@@ -208,12 +209,10 @@ class MainScreen(QMainWindow):
             else:
                 self.surpress_output = False
                 return False
-                
 
     def clearOutputBox(self):
         self.output_textbox.clear()
         print("Clearing output...")
-
 
     def setBtnClick(self):
         self.account_sid = self.twil_sid_le.text()
@@ -221,9 +220,11 @@ class MainScreen(QMainWindow):
         self.twil_num = utils.formatNumber(self.twil_num_le.text())
         try:
             self.client = Client(self.account_sid, self.auth_token)
-            self.output_textbox.appendPlainText("Successfully created Twilio Client\n")
+            self.output_textbox.appendPlainText(
+                "Successfully created Twilio Client\n")
         except:
-            self.output_textbox.appendPlainText("Unable to initialize client with SID and Auth token...")
+            self.output_textbox.appendPlainText(
+                "Unable to initialize client with SID and Auth token...")
 
     def runBtnClick(self):
         msg_data = self.msg_to_send.toPlainText()

@@ -11,17 +11,25 @@ import Pages
 # Set num_recipients < 0 to send to all numbers in file
 # Client must already be declared with tokens
 
+# Excel file format
+NUM_COL = 1
+NAME_COL = 2
+RES_COL = 3
+
+
 # Cell colors
 RED = 'ff0000'
 GREEN = '00ff00'
 YELLOW = 'ffff00'
 
+
 class Person:
-        def __init__(self, name, num):
-            self.name = name
-            self.number = num
-        def getInfo(self):
-            return self.name + ": " + self.number
+    def __init__(self, name, num):
+        self.name = name
+        self.number = num
+
+    def getInfo(self):
+        return self.name + ": " + self.number
 
 
 # Prepends country code if not present
@@ -32,6 +40,8 @@ def formatNumber(num):
 
 # Function takes in a message to send and a name string
 # Replaces 'name' in original message with first name only
+
+
 def addFirstNameToMsg(message, name):
     try:
         full_name = name.split()
@@ -43,18 +53,19 @@ def addFirstNameToMsg(message, name):
             first_name = full_name[0]
         elif name_len is 1:
             first_name = name
-    
+
     new_msg = message.replace("'name'", first_name)
     return new_msg
 
 # Returns list of properly formatted phone numbers from excel sheet
 
+
 def populateNumberList(sheet):
     max_row = sheet.max_row
     contactList = []
-    for i in range(1, max_row + 1):
-        numCell = sheet.cell(row=i, column=1)
-        nameCell = sheet.cell(row=i, column=2)
+    for i in range(NUM_COL, max_row + 1):
+        numCell = sheet.cell(row=i, column=NUM_COL)
+        nameCell = sheet.cell(row=i, column=NAME_COL)
         person = Person(str(nameCell.value), formatNumber(str(numCell.value)))
         contactList.append(person)
         #print("Person added to contact list: " + person.getInfo())
@@ -65,8 +76,8 @@ def populateNumberList(sheet):
 def markSentExcel(num, sheet, color):
     count = 1
     for row in range(1, sheet.max_row + 1):
-        cellObj = sheet.cell(row=row, column=1)  # Phone number
-        cellColor = sheet.cell(row=row, column=3)  # Status color
+        cellObj = sheet.cell(row=row, column=NUM_COL)  # Phone number
+        cellColor = sheet.cell(row=row, column=RES_COL)  # Status color
         if str(cellObj.value) == num.replace("+1", ""):
             cellColor.fill = PatternFill(
                 start_color=color, end_color=color, fill_type="solid")
@@ -91,7 +102,8 @@ def massSendSMS(msg, numbers, sheet, self):
         try:
             message = addFirstNameToMsg(msg, num.name)
             #print("Message to " + str(num.number) + " " + message)
-            self.client.messages.create(body=message, from_=self.twil_num, to=num.number)
+            self.client.messages.create(
+                body=message, from_=self.twil_num, to=num.number)
         except:
             markSentExcel(num.number, sheet, RED)
             output = "Message send failure to " + num.number
