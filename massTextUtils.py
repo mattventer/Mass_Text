@@ -4,6 +4,7 @@ from PyQt5.QtCore import *
 from openpyxl.styles import PatternFill, Alignment
 from flask import Flask, request
 from twilio import twiml
+from timeit import default_timer as timer
 import time
 import Pages
 # Sends the same text to mass amount
@@ -59,6 +60,7 @@ def markSentExcel(num, sheet, color):
 
 
 def massSendSMS(msg, numbers, sheet, self):
+    start = timer()
     count = 1
     output = None
     for num in numbers:
@@ -76,3 +78,5 @@ def massSendSMS(msg, numbers, sheet, self):
         QApplication.processEvents()
         count += 1
         time.sleep(0.3)
+    end = timer()
+    return end - start
