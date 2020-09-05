@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo "Starting"
+
+cd src && ./user_interface.py
